@@ -1,0 +1,25 @@
+# Environment variables
+.env
+.env.*
+
+# Raw data
+data/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# dbt
+target/
+dbt_packages/
+logs/
+.partial_parse.msgpack
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
