@@ -30,6 +30,23 @@ graph TD
 - Docker 
 - PostgreSQL 
 - Python 
+## Project structure
+ 
+```
+.
+├── database/
+│   ├── init/
+│   │   └── 01_create_schema.sql
+│   └── sql/
+│       └── 01_create_raw_tables.sql
+├── scripts/
+│   └── load_raw.py
+├── data/              # ignored by Git
+├── .env               # ignored by Git
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+```
 
 
 ## Phase 1
