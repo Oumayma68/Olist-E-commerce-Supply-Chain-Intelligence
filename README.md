@@ -53,15 +53,7 @@ graph TD
 
 The first phase focuses on building the PostgreSQL raw layer and preparing the project for dbt transformations.
 
-### Current step
-
-- PostgreSQL container
-- `raw_olist` schema
-- Six raw tables
-- Automated CSV ingestion
-- Row-count validation
-
-## Data ingestion
+### Data ingestion
 
 The `scripts/load_raw.py` script:
 
@@ -70,4 +62,20 @@ The `scripts/load_raw.py` script:
 3. truncates the raw tables;
 4. loads the CSV files using PostgreSQL `COPY`;
 5. validates the loaded row counts.
+
+### dbt setup
+
+The dbt transformation layer is initialized under the `dbt_project/` directory.
+
+The current dbt setup includes:
+
+- dbt Core with the PostgreSQL adapter;
+- PostgreSQL connection configuration;
+- `dbt_project.yml` project configuration;
+- `dbt_utils` package;
+- `dbt_expectations` package;
+- `package-lock.yml` for dependency version locking;
+- `profiles.yml.example` as an anonymized PostgreSQL profile template.
+
+The local dbt profile is stored in `~/.dbt/profiles.yml` and is not committed to the repository because it contains database credentials.
 
