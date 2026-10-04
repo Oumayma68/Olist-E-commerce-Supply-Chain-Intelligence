@@ -5,3 +5,9 @@ sources:
     schema: raw_olist
     tables:
       - name: raw_products
+      - name: raw_customers
+      - name: raw_orders
+      - name: raw_order_items
+      - name: raw_payments
+      - name: raw_sellers
+

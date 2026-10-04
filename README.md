@@ -129,3 +129,19 @@ When a tracked attribute changes, dbt closes the previous version and creates a 
 
 The SCD Type 2 behavior was validated by changing a product's weight in the raw layer, running the snapshot, and verifying that two versions of the product were preserved in `snap_olist.snp_products`.
 
+### dbt staging models
+
+The staging layer provides a standardized interface between the raw PostgreSQL tables and the future analytical marts.
+
+The current staging models are:
+
+* stg_customers
+* stg_orders
+* stg_order_items
+* stg_payments
+* stg_products
+* stg_sellers
+
+During development, the dbt target is configured for the development environment. Each staging model is therefore limited to 1,000 rows, allowing for faster local development and validation without processing the full datasets at every iteration.
+
+All six staging models have been successfully validated in the development environment, with 1,000 rows processed for each model.
