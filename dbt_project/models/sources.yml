@@ -1,0 +1,7 @@
+version: 2
+
+sources:
+  - name: raw_olist
+    schema: raw_olist
+    tables:
+      - name: raw_products

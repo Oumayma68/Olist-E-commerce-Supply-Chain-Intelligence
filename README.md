@@ -22,6 +22,12 @@ graph TD
     C --> G["raw_olist.raw_payments"]
     C --> H["raw_olist.raw_products"]
     C --> I["raw_olist.raw_sellers"]
+    H --> J["dbt snapshots"] 
+    J --> K["snap_olist.snp_products"] 
+    C --> L["dbt transformation layer"] 
+    K --> L 
+    L --> M["staging models"] 
+    M --> N["dimensional marts"]
 ```
 
 ## Stack
@@ -30,6 +36,8 @@ graph TD
 - Docker 
 - PostgreSQL 
 - Python 
+- dbt Core
+- dbt-postgres
 ## Project structure
  
 ```
@@ -39,8 +47,24 @@ graph TD
 │   │   └── 01_create_schema.sql
 │   └── sql/
 │       └── 01_create_raw_tables.sql
+│
 ├── scripts/
 │   └── load_raw.py
+│
+├── dbt_project/
+│   ├── analyses/
+│   ├── macros/
+│   ├── models/
+│   │   └── sources.yml
+│   ├── snapshots/
+│   │   └── snp_products.sql
+│   ├── seeds/
+│   ├── tests/
+│   ├── dbt_project.yml
+│   ├── packages.yml
+│   ├── package-lock.yml
+│   └── profiles.yml.example
+│
 ├── data/              # ignored by Git
 ├── .env               # ignored by Git
 ├── docker-compose.yml
@@ -78,4 +102,30 @@ The current dbt setup includes:
 - `profiles.yml.example` as an anonymized PostgreSQL profile template.
 
 The local dbt profile is stored in `~/.dbt/profiles.yml` and is not committed to the repository because it contains database credentials.
+
+## dbt snapshots — SCD Type 2
+
+The first historical model is the product snapshot:`dbt_project/snapshots/snp_products.sql`
+It reads from: `raw_olist.raw_products` and creates:`snap_olist.snp_products`
+
+Because the raw Olist products dataset does not contain an update timestamp, the snapshot uses dbt's `check` strategy to detect changes in product attributes.
+Tracked attributes include:
+
+* `product_category_name`
+* `product_name_lenght`
+* `product_description_lenght`
+* `product_photos_qty`
+* `product_weight_g`
+* `product_length_cm`
+* `product_height_cm`
+* `product_width_cm`
+
+dbt maintains the historical validity of each version through metadata columns such as:
+
+* `dbt_valid_from`
+* `dbt_valid_to`
+
+When a tracked attribute changes, dbt closes the previous version and creates a new version rather than overwriting the historical record.
+
+The SCD Type 2 behavior was validated by changing a product's weight in the raw layer, running the snapshot, and verifying that two versions of the product were preserved in `snap_olist.snp_products`.
 
