@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: dim_products
+    description: "Product dimension with one row per product."
+
+    columns:
+      - name: product_id
+        description: "Unique identifier for each product."
+        data_tests:
+          - not_null
+          - unique

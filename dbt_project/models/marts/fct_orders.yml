@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: "Fact table with one row per order."
+
+    columns:
+      - name: order_id
+        description: "Unique identifier for each order."
+        data_tests:
+          - not_null
+          - unique
