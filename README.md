@@ -27,7 +27,8 @@ graph TD
     C --> L["dbt transformation layer"] 
     K --> L 
     L --> M["staging models"] 
-    M --> N["dimensional marts"]
+    M --> N["analytical marts"]
+    N --> O["mart_supply_chain_kpis"]
 ```
 
 ## Stack
@@ -38,6 +39,7 @@ graph TD
 - Python 
 - dbt Core
 - dbt-postgres
+
 ## Project structure
  
 ```
@@ -72,76 +74,45 @@ graph TD
 └── README.md
 ```
 
+## Phase 1 — Raw layer & staging
 
-## Phase 1
-
-The first phase focuses on building the PostgreSQL raw layer and preparing the project for dbt transformations.
+The first phase builds the PostgreSQL raw layer and prepares the dbt transformations.
 
 ### Data ingestion
 
-The `scripts/load_raw.py` script:
-
-1. checks that the expected CSV files exist;
-2. connects to PostgreSQL using environment variables;
-3. truncates the raw tables;
-4. loads the CSV files using PostgreSQL `COPY`;
-5. validates the loaded row counts.
+The `scripts/load_raw.py` script checks the CSV files, loads them into PostgreSQL using `COPY`, and validates the loaded row counts.
 
 ### dbt setup
 
-The dbt transformation layer is initialized under the `dbt_project/` directory.
+dbt Core with the PostgreSQL adapter, the `dbt_utils` and `dbt_expectations` packages, and a `profiles.yml.example` template. The local dbt profile (`~/.dbt/profiles.yml`) is not committed because it contains database credentials.
 
-The current dbt setup includes:
+### Product snapshot — SCD Type 2
 
-- dbt Core with the PostgreSQL adapter;
-- PostgreSQL connection configuration;
-- `dbt_project.yml` project configuration;
-- `dbt_utils` package;
-- `dbt_expectations` package;
-- `package-lock.yml` for dependency version locking;
-- `profiles.yml.example` as an anonymized PostgreSQL profile template.
+`snap_olist.snp_products` keeps the history of product attribute changes using a dbt snapshot (SCD Type 2). When a tracked attribute changes, the previous version is closed and a new one is created instead of overwriting the record.
 
-The local dbt profile is stored in `~/.dbt/profiles.yml` and is not committed to the repository because it contains database credentials.
+### Staging models
 
-## dbt snapshots — SCD Type 2
+Six staging models (`stg_customers`, `stg_orders`, `stg_order_items`, `stg_payments`, `stg_products`, `stg_sellers`) provide a standardized interface to the raw tables. The 1,000-row development limit has been removed: they now run on the full datasets.
 
-The first historical model is the product snapshot:`dbt_project/snapshots/snp_products.sql`
-It reads from: `raw_olist.raw_products` and creates:`snap_olist.snp_products`
+## Phase 2 — Analytical modeling & data quality
 
-Because the raw Olist products dataset does not contain an update timestamp, the snapshot uses dbt's `check` strategy to detect changes in product attributes.
-Tracked attributes include:
+This phase adds the analytical marts, business metrics and automated data quality tests. The marts are materialized as tables in the `analytics` schema.
 
-* `product_category_name`
-* `product_name_lenght`
-* `product_description_lenght`
-* `product_photos_qty`
-* `product_weight_g`
-* `product_length_cm`
-* `product_height_cm`
-* `product_width_cm`
+| Model | Purpose |
+|---|---|
+| `dim_products` | Product attributes and historical versions (SCD Type 2) |
+| `fct_orders` | Order lifecycle and delivery performance |
+| `fct_order_items` | Item prices, freight costs and total item value |
+| `fct_payments` | Payments, payment methods and installments |
+| `mart_supply_chain_kpis` | Aggregated supply chain KPIs: order volume, late deliveries, average delivery time, item value, freight cost and freight-to-value ratio |
 
-dbt maintains the historical validity of each version through metadata columns such as:
+### Data quality
 
-* `dbt_valid_from`
-* `dbt_valid_to`
+The project relies on dbt built-in tests, `dbt_utils` and `dbt_expectations`, plus custom generic and singular tests covering constraints, relationships and business rules.
 
-When a tracked attribute changes, dbt closes the previous version and creates a new version rather than overwriting the historical record.
+Latest full run: **64 passed, 3 warnings, 0 errors**. The warnings come from known anomalies in the source data (inconsistent order, pickup and delivery dates), which are flagged rather than artificially corrected.
 
-The SCD Type 2 behavior was validated by changing a product's weight in the raw layer, running the snapshot, and verifying that two versions of the product were preserved in `snap_olist.snp_products`.
+### Dbt documentation
 
-### dbt staging models
+Models and columns are documented in dbt.
 
-The staging layer provides a standardized interface between the raw PostgreSQL tables and the future analytical marts.
-
-The current staging models are:
-
-* stg_customers
-* stg_orders
-* stg_order_items
-* stg_payments
-* stg_products
-* stg_sellers
-
-During development, the dbt target is configured for the development environment. Each staging model is therefore limited to 1,000 rows, allowing for faster local development and validation without processing the full datasets at every iteration.
-
-All six staging models have been successfully validated in the development environment, with 1,000 rows processed for each model.
