@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: mart_supply_chain_kpis
+    description: >
+      Executive-level supply chain KPI mart aggregating order delivery
+      performance, item revenue, and freight costs. The model returns
+      a single row of aggregated metrics for the full dataset.
+
+    columns:
+      - name: total_orders
+        description: >
+          Total number of orders in the orders fact table, regardless
+          of order status.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: delivered_orders
+        description: >
+          Number of orders whose status is delivered. This is based
+          on the recorded order status, not solely on the presence
+          of a delivery timestamp.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: late_delivered_orders
+        description: >
+          Number of orders classified as late because the recorded
+          customer delivery date is later than the estimated delivery date.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: avg_delivery_delay_days
+        description: >
+          Average delivery delay in days for orders with delivered status.
+          Calculated from the recorded delivery delay values. Orders with
+          missing delivery timestamps may be excluded from the average.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: late_delivery_rate_pct
+        description: >
+          Percentage of orders with a classifiable delivery outcome
+          that were delivered after the estimated delivery date.
+          Orders without a usable delivery outcome are excluded.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100
+
+      - name: total_item_revenue
+        description: >
+          Sum of item prices across all order items, excluding freight.
+          Represents item value rather than net profit or accounting revenue.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: total_freight_cost
+        description: >
+          Sum of freight charges recorded across all order items.
+          Represents the freight values in the source dataset.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: freight_to_item_revenue_pct
+        description: >
+          Total freight charges divided by total item prices, multiplied
+          by 100. Indicates the relative weight of freight compared with
+          item value; it is not a profit margin.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0

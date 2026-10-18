@@ -11,3 +11,7 @@ sources:
       - name: raw_payments
       - name: raw_sellers
 
+  - name: snap_olist
+    schema: snap_olist
+    tables:
+      - name: snp_products

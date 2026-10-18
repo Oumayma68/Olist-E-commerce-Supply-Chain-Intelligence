@@ -2,11 +2,36 @@ version: 2
 
 models:
   - name: dim_products
-    description: "Product dimension with one row per product."
+    description: >
+      Historized product dimension based on a dbt SCD Type 2 snapshot.
+      Preserves product versions over time, enabling historical analysis
+      of product attributes and identification of the current version.
 
     columns:
       - name: product_id
-        description: "Unique identifier for each product."
+        description: >
+          Business identifier of the product. Multiple historical
+          versions may exist for the same product.
+        data_tests:
+          - not_null
+
+      - name: dbt_scd_id
+        description: >
+          Unique technical identifier for a specific historical version
+          of a product.
         data_tests:
           - not_null
           - unique
+
+      - name: dbt_valid_from
+        description: >
+          Timestamp marking when this product version became valid.
+        data_tests:
+          - not_null
+
+      - name: is_current
+        description: >
+          Boolean indicator set to true when the product version is
+          currently valid, based on dbt_valid_to being null.
+        data_tests:
+          - not_null

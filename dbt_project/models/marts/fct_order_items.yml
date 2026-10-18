@@ -2,16 +2,44 @@ version: 2
 
 models:
   - name: fct_order_items
-    description: "Fact table with one row per item in an order."
+    description: >
+      Order-item fact table with one row per item within an order.
+      Supports analysis of item prices, freight charges, seller activity,
+      and total item value across the e-commerce supply chain.
 
     columns:
       - name: order_id
+        description: >
+          Identifier of the order containing the item.
         data_tests:
           - not_null
 
       - name: order_item_id
+        description: >
+          Sequential identifier of an item within an order. Combined
+          with order_id, it identifies a unique order item.
         data_tests:
           - not_null
+
+      - name: price
+        description: >
+          Price of the item, excluding freight charges.
+        data_tests:
+          - not_null
+          - is_positive
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                strictly: true
+
+      - name: freight_value
+        description: >
+          Freight charge associated with the order item.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
 
     data_tests:
       - dbt_utils.unique_combination_of_columns:

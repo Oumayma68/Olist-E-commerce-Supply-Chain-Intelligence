@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: fct_payments
+    description: >
+      Payment-level fact table containing one row per payment sequence
+      within an order. Supports analysis of payment methods, payment
+      amounts, and installment usage.
+
+    columns:
+      - name: order_id
+        description: >
+          Identifier of the order associated with the payment.
+        data_tests:
+          - not_null
+
+      - name: payment_sequential
+        description: >
+          Sequential number identifying a payment within an order.
+          Combined with order_id, it identifies a unique payment record.
+        data_tests:
+          - not_null
+
+      - name: payment_type
+        description: >
+          Payment method recorded for the transaction.
+        data_tests:
+          - not_null
+
+      - name: payment_value
+        description: >
+          Payment amount recorded in the source dataset's currency.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                strictly: false
+
+      - name: payment_amount
+        description: >
+          Alias of payment_value representing the recorded payment amount.
+        data_tests:
+          - not_null
+
+      - name: is_installment_payment
+        description: >
+          Boolean indicator set to true when the payment uses more than
+          one installment, based on payment_installments.
+        data_tests:
+          - not_null
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - order_id
+              - payment_sequential

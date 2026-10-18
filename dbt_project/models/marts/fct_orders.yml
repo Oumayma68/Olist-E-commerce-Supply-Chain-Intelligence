@@ -2,11 +2,39 @@ version: 2
 
 models:
   - name: fct_orders
-    description: "Fact table with one row per order."
+    description: >
+      Order-level fact table containing one row per order. Includes order
+      lifecycle timestamps, approval and delivery delays, and delivery
+      performance indicators used to monitor supply chain reliability.
 
     columns:
       - name: order_id
-        description: "Unique identifier for each order."
+        description: >
+          Unique identifier of an order. Each order must appear exactly once
+          in this fact table.
         data_tests:
           - not_null
           - unique
+
+      - name: delivery_performance
+        description: >
+          Delivery outcome classification. Values are late when the customer
+          delivery timestamp is after the estimated delivery date, on_time
+          when delivery occurred on or before the estimate, not_delivered
+          when no customer delivery timestamp exists, and
+          estimate_unavailable when a delivered order has no estimated date.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - late
+                  - on_time
+                  - not_delivered
+                  - estimate_unavailable
+
+      - name: is_delivery_late
+        description: >
+          Boolean flag indicating whether the customer delivery timestamp
+          is later than the estimated delivery date. Null when either date
+          required for comparison is missing.
