@@ -16,6 +16,9 @@ target/
 dbt_packages/
 logs/
 .partial_parse.msgpack
+analyses
+macros
+seeds
 
 # IDE
 .vscode/

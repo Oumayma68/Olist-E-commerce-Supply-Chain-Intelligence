@@ -1,6 +1,6 @@
 # Olist E-Commerce & Supply Chain Intelligence
 
-This project is an end-to-end data platform that powers analytics for a Brazilian e-commerce marketplace ecosystem. It ingests millions of transaction records from Olist sellers and transforms raw operational data into a trusted, production-grade analytical foundation.
+This project is an end-to-end data platform that powers analytics for a Brazilian e-commerce marketplace ecosystem. It ingests transaction records from Olist sellers and transforms raw operational data into a trusted, production-grade analytical foundation.
 
 The architecture is built around three core stages:
 
@@ -14,21 +14,18 @@ The result is a governed data ecosystem that delivers trustworthy insights into 
 
 ```mermaid
 graph TD
-    A["Olist CSV files"] --> B["Python ingestion script"]
+    A["Olist CSV Files"] --> B["Python Ingestion Script"]
     B --> C["PostgreSQL"]
-    C --> D["raw_olist.raw_customers"]
-    C --> E["raw_olist.raw_orders"]
-    C --> F["raw_olist.raw_order_items"]
-    C --> G["raw_olist.raw_payments"]
-    C --> H["raw_olist.raw_products"]
-    C --> I["raw_olist.raw_sellers"]
-    H --> J["dbt snapshots"] 
-    J --> K["snap_olist.snp_products"] 
-    C --> L["dbt transformation layer"] 
-    K --> L 
-    L --> M["staging models"] 
-    M --> N["analytical marts"]
-    N --> O["mart_supply_chain_kpis"]
+    C --> D["Raw Data Layer"]
+    D --> E["dbt Transformation Layer"]
+    E --> F["Staging Models"]
+    F --> G["Analytical Marts"]
+    G --> H["Supply Chain KPIs"]
+    G --> I["Data Quality Monitoring"]
+    H --> J["Metabase Dashboard"]
+    I --> J
+    D --> K["dbt Snapshots"]
+    K --> L["Historical Product Tracking"]
 ```
 
 ## Stack
@@ -94,25 +91,51 @@ dbt Core with the PostgreSQL adapter, the `dbt_utils` and `dbt_expectations` pac
 
 Six staging models (`stg_customers`, `stg_orders`, `stg_order_items`, `stg_payments`, `stg_products`, `stg_sellers`) provide a standardized interface to the raw tables. The 1,000-row development limit has been removed: they now run on the full datasets.
 
-## Phase 2 — Analytical modeling & data quality
+## Phase 2 — Analytical Modeling & Data Quality 
 
-This phase adds the analytical marts, business metrics and automated data quality tests. The marts are materialized as tables in the `analytics` schema.
+This phase builds the analytical foundation of the project, combining business metrics, data quality monitoring and downstream analytics documentation.
 
 | Model | Purpose |
 |---|---|
-| `dim_products` | Product attributes and historical versions (SCD Type 2) |
+| `dim_products` | Product attributes and historical versions |
 | `fct_orders` | Order lifecycle and delivery performance |
-| `fct_order_items` | Item prices, freight costs and total item value |
-| `fct_payments` | Payments, payment methods and installments |
-| `mart_supply_chain_kpis` | Aggregated supply chain KPIs: order volume, late deliveries, average delivery time, item value, freight cost and freight-to-value ratio |
+| `fct_order_items` | Item prices, freight costs and item value |
+| `fct_payments` | Payment methods, values and installments |
+| `mart_supply_chain_kpis` | Aggregated supply chain performance indicators |
+| `mart_data_health` | Data quality monitoring across orders, payments and logistics |
 
-### Data quality
+### Data Quality & Monitoring
 
-The project relies on dbt built-in tests, `dbt_utils` and `dbt_expectations`, plus custom generic and singular tests covering constraints, relationships and business rules.
+The project uses dbt tests to identify data inconsistencies and validate the reliability of analytical models.
 
-Latest full run: **64 passed, 3 warnings, 0 errors**. The warnings come from known anomalies in the source data (inconsistent order, pickup and delivery dates), which are flagged rather than artificially corrected.
+Latest full test run:
 
-### Dbt documentation
+| Result | Count |
+|---|---:|
+| Passed | 64 |
+| Warnings | 3 |
+| Errors | 0 |
+| Total Tests | 67 |
 
-Models and columns are documented in dbt.
+The warnings come from known anomalies in the source data (inconsistent order, pickup and delivery dates), which are flagged rather than artificially corrected.
 
+
+## Phase 3 — Supply Chain Dashboard & Exposures
+
+The **Olist Supply Chain Intelligence** dashboard, built with Metabase, provides an overview of marketplace performance, delivery operations and data quality.
+
+[![image(1).png](https://i.postimg.cc/DwF4r0qB/image(1).png)](https://postimg.cc/MvPGxW3Q)
+
+### Dashboard Visualizations
+
+- **Monthly Order Volume** — tracks order trends over time.
+- **Monthly Late Orders** — monitors late delivery trends.
+- **Data Quality Issues by Category** — highlights data quality issues across the dataset.
+
+The dashboard brings business KPIs and data quality indicators together in a single interface to support supply chain performance analysis.
+
+### dbt Exposures
+
+The `olist_supply_chain_dashboard` exposure documents the downstream Metabase dashboard and its relationship with the analytical models.
+
+This provides visibility into how the transformed data is consumed by business intelligence tools and helps document dependencies between the data warehouse and its reporting layer.

@@ -1,0 +1,22 @@
+version: 2
+
+exposures:
+  - name: olist_supply_chain_dashboard
+    label: Olist Supply Chain Intelligence
+    type: dashboard
+    maturity: medium
+
+    description: >
+      Metabase dashboard for monitoring Olist e-commerce supply chain
+      performance, including order volumes, delivery delays, freight costs,
+      item value, and data quality indicators. The dashboard relies on
+      dbt analytical models in the analytics schema.
+
+    depends_on:
+      - ref('mart_supply_chain_kpis')
+      - ref('mart_data_health')
+      - ref('fct_orders')
+      - ref('fct_order_items')
+
+    owner:
+      name: Olist Analytics
